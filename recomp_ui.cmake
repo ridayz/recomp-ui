@@ -76,7 +76,17 @@ function(_recomp_ui_utf8_manifest TGT)
     # One application manifest per executable: the linker refuses to merge
     # two. A host that already embeds one (snesrecomp's runner sources do)
     # keeps its own.
+    #
+    # psxrecomp's psxrecomp_windows_manifest() injects its manifest through a
+    # companion OBJECT library (${TGT}_manifest) referenced via
+    # $<TARGET_OBJECTS:...>, which never shows up in this target's SOURCES.
+    # Detect that companion first, or both manifests reach the linker and
+    # ld.lld aborts with "duplicate resource: type MANIFEST".
+    if(TARGET ${TGT}_manifest)
+        return()
+    endif()
     get_target_property(_srcs ${TGT} SOURCES)
+<<<<<<< HEAD
     foreach(_src IN LISTS _srcs)
         if(_src MATCHES "\\.manifest$" OR _src MATCHES "manifest\\.rc$")
             return()
@@ -95,6 +105,15 @@ function(_recomp_ui_utf8_manifest TGT)
             endif()
         endif()
     endforeach()
+=======
+    if(_srcs)
+        foreach(_src IN LISTS _srcs)
+            if(_src MATCHES "\\.manifest$" OR _src MATCHES "manifest\\.rc$")
+                return()
+            endif()
+        endforeach()
+    endif()
+>>>>>>> e58144e (cmake: skip the injected UTF-8 manifest when the host ships its own)
     set(_manifest "${RECOMP_UI_ROOT}/windows/recomp_utf8.manifest")
     if(MSVC)
         target_sources(${TGT} PRIVATE "${_manifest}")
